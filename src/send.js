@@ -2,6 +2,7 @@
 
 import { createSignMessage, createSignature } from './signature'
 
+const fetchImplementation = typeof fetch !== 'undefined' ? fetch : require('isomorphic-fetch');
 const DEFAULT_GAS_PRICE = [{ amount: (2.5e-8).toFixed(9), denom: `uatom` }]
 
 export default async function send ({ gas, gasPrices = DEFAULT_GAS_PRICE, memo = `` }, messages, signer, cosmosRESTURL, chainId, accountNumber, sequence) {
@@ -9,7 +10,7 @@ export default async function send ({ gas, gasPrices = DEFAULT_GAS_PRICE, memo =
 
   // broadcast transaction with signatures included
   const body = createBroadcastBody(signedTx, `sync`)
-  const res = await fetch(`${cosmosRESTURL}/txs`, { method: `POST`, body })
+  const res = await fetchImplementation(`${cosmosRESTURL}/txs`, { method: `POST`, body })
     .then(res => res.json())
     .then(assertOk)
 
@@ -43,7 +44,7 @@ export async function queryTxInclusion (txHash, cosmosRESTURL, iterations = 60, 
   let includedTx
   while (iterations-- > 0) {
     try {
-      includedTx = await fetch(`${cosmosRESTURL}/txs/${txHash}`)
+      includedTx = await fetchImplementation(`${cosmosRESTURL}/txs/${txHash}`)
         .then(function (response) {
           if (response.status >= 200 && response.status < 300) {
             return Promise.resolve(response.json())
